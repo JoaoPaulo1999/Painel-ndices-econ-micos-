@@ -148,11 +148,140 @@ const industrializedNames = {
   import: ['Máquinas e equipamentos', 'Circuitos e componentes eletrônicos', 'Medicamentos e insumos farmacêuticos', 'Peças e acessórios para veículos', 'Produtos químicos orgânicos', 'Plásticos e polímeros', 'Instrumentos médicos', 'Motores e geradores', 'Equipamentos de telecomunicação', 'Componentes industriais']
 };
 
+const manufacturedMatchers = {
+  export: [['fuel oil', 'óleos combustíveis'], ['automóveis', 'veículos'], ['aeronaves', 'aviões'], ['celulose', 'pastas químicas'], ['açúcar', 'açúcares'], ['produtos químicos', 'químicos'], ['máquinas', 'equipamentos'], ['plásticos', 'polímeros'], ['papel'], ['calçados'] ],
+  import: [['máquinas', 'equipamentos'], ['circuitos', 'componentes eletrônicos'], ['medicamentos', 'farmacêuticos'], ['peças', 'veículos'], ['produtos químicos', 'químicos'], ['plásticos', 'polímeros'], ['instrumentos médicos', 'aparelhos médicos'], ['motores', 'geradores'], ['telecomunicação'], ['componentes industriais']]
+};
+
 
 let activeFlow = 'export';
+let liveComexData = {};
+let liveProducts = {};
+let liveDestinations = {};
+let liveSections = {};
+let liveManufactured = {};
+let comexRequest = null;
 
 function formatBi(amount) {
   return `US$ ${amount.toFixed(2).replace('.', ',')} bi`;
+}
+
+function getComexPeriod(key) {
+  if (key === '2025-full') return { from: '2025-01', to: '2025-12' };
+  if (key === '2025-ytd') return { from: '2025-01', to: '2025-08' };
+  return { from: '2026-01', to: '2026-12' };
+}
+
+async function loadComexData() {
+  if (comexRequest) return comexRequest;
+  const key = document.querySelector('#period-select').value;
+  const flow = activeFlow;
+  const period = getComexPeriod(key);
+  const body = {
+    flow,
+    monthDetail: false,
+    yearDetail: true,
+    details: ['ncm'],
+    country: [],
+    countryGroup: [],
+    state: [],
+    ncm: [],
+    ncmSection: [],
+    ncmChapter: [],
+    economicBlock: [],
+    via: [],
+    urf: [],
+    cnae: [],
+    period
+  };
+
+  comexRequest = (async () => {
+    try {
+      const response = await fetch('https://api-comexstat.mdic.gov.br/general', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
+      body: JSON.stringify(body)
+      });
+      if (!response.ok) throw new Error(`Comex Stat: ${response.status}`);
+      const payload = await response.json();
+      const rows = payload?.data?.list || [];
+      const total = rows.reduce((sum, row) => sum + Number(row.metricFOB || 0), 0) / 1e9;
+      if (!rows.length || !Number.isFinite(total)) throw new Error('Resposta do Comex Stat sem valores.');
+      liveComexData[`${flow}:${key}`] = { total, rows };
+      liveProducts[`${flow}:${key}`] = rows.slice(0, 10).map((row, index) => ({
+        name: row.ncm || row.coNcm || 'Produto não identificado',
+        value: formatBi(Number(row.metricFOB) / 1e9),
+        change: products[index]?.change || '—',
+        width: index === 0 ? 100 : Math.max(18, Math.round(Number(row.metricFOB) / Number(rows[0].metricFOB) * 100))
+      }));
+      const manufacturedRows = manufacturedMatchers[flow].map(matchers => rows.reduce((sum, row) => {
+        const name = String(row.ncm || '').toLowerCase();
+        return matchers.some(matcher => name.includes(matcher)) ? sum + Number(row.metricFOB || 0) : sum;
+      }, 0) / 1e9);
+      const manufacturedTotal = manufacturedRows.reduce((sum, value) => sum + value, 0);
+      if (manufacturedTotal > 0) liveManufactured[`${flow}:${key}`] = { values: manufacturedRows, total: manufacturedTotal };
+      try {
+        await loadComexDestinations(flow, key, period, total);
+      } catch (error) {
+        console.warn('Não foi possível atualizar os destinos do Comex Stat.', error);
+      }
+      try {
+        await loadComexSections(flow, key, period);
+      } catch (error) {
+        console.warn('Não foi possível atualizar os setores do Comex Stat.', error);
+      }
+      if (activeFlow === flow && document.querySelector('#period-select').value === key) applyPeriod(key);
+      return true;
+    } catch (error) {
+      console.warn('Não foi possível consultar o Comex Stat.', error);
+      return false;
+    } finally {
+      comexRequest = null;
+    }
+  })();
+  return comexRequest;
+}
+
+async function loadComexSections(flow, key, period) {
+  const body = {
+    flow, monthDetail: false, yearDetail: true, details: ['section'],
+    country: [], countryGroup: [], state: [], ncm: [], ncmSection: [], ncmChapter: [],
+    economicBlock: [], via: [], urf: [], cnae: [], period
+  };
+  const response = await fetch('https://api-comexstat.mdic.gov.br/general', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
+    body: JSON.stringify(body)
+  });
+  if (!response.ok) throw new Error(`Comex Stat setores: ${response.status}`);
+  const rows = (await response.json())?.data?.list || [];
+  liveSections[`${flow}:${key}`] = rows.slice(0, 4).map(row => ({ name: row.section, value: Number(row.metricFOB) / 1e9 }));
+}
+
+async function loadComexDestinations(flow, key, period, total) {
+  const body = {
+    flow,
+    monthDetail: false,
+    yearDetail: true,
+    details: ['country'],
+    country: [], countryGroup: [], state: [], ncm: [], ncmSection: [], ncmChapter: [],
+    economicBlock: [], via: [], urf: [], cnae: [], period
+  };
+  const response = await fetch('https://api-comexstat.mdic.gov.br/general', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
+    body: JSON.stringify(body)
+  });
+  if (!response.ok) throw new Error(`Comex Stat destinos: ${response.status}`);
+  const rows = (await response.json())?.data?.list || [];
+  if (!rows.length) return;
+  const top = rows.slice(0, 9);
+  const names = top.map(row => row.country || 'Destino não identificado');
+  const shares = top.map(row => `${(Number(row.metricFOB) / 1e9 / total * 100).toFixed(1).replace('.', ',')}%`);
+  const used = top.reduce((sum, row) => sum + Number(row.metricFOB), 0) / 1e9;
+  names.push('Outros destinos');
+  shares.push(`${Math.max(0, (100 - used / total * 100)).toFixed(1).replace('.', ',')}%`);
+  liveDestinations[`${flow}:${key}`] = { names, shares };
 }
 
 function formatBalanceValue(value) {
@@ -275,11 +404,20 @@ function setTrend(selector, value) {
 function applyPeriod(key) {
   const dataSet = activeFlow === 'import' ? importData : periodData;
   const data = dataSet[key] || dataSet['2026-ytd'];
-  products = activeFlow === 'import'
+  products = liveProducts[`${activeFlow}:${key}`] || (activeFlow === 'import'
     ? data.products
-    : baseProducts.map((product, index) => ({ ...product, value: formatBi(product.amount * data.factor), change: data.productChanges[index] }));
+    : baseProducts.map((product, index) => ({ ...product, value: formatBi(product.amount * data.factor), change: data.productChanges[index] })));
   renderProducts();
-  renderDestinations(data.destinationShares, data.destinationNames);
+  const liveDestinationData = liveDestinations[`${activeFlow}:${key}`];
+  renderDestinations(liveDestinationData?.shares || data.destinationShares, liveDestinationData?.names || data.destinationNames);
+  const currentSections = liveSections[`${activeFlow}:${key}`];
+  if (currentSections?.length) {
+    document.querySelectorAll('#setores + .sector-grid .sector-card').forEach((card, index) => {
+      if (!currentSections[index]) return;
+      card.querySelector('h3').textContent = currentSections[index].name;
+      card.querySelector('.sector-value').textContent = formatBi(currentSections[index].value);
+    });
+  }
 
   document.querySelector('#period-heading').textContent = `COMEX · ${data.heading}`;
   document.querySelector('#flow-breadcrumb').textContent = activeFlow === 'import' ? 'IMPORTAÇÕES' : 'EXPORTAÇÕES';
@@ -291,7 +429,16 @@ function applyPeriod(key) {
   document.querySelector('#kpi-total-label').firstChild.textContent = activeFlow === 'import' ? 'IMPORTAÇÕES TOTAIS ' : 'EXPORTAÇÕES TOTAIS ';
   document.querySelector('#kpi-manufactured-label').firstChild.textContent = activeFlow === 'import' ? 'INDUSTRIALIZADOS ' : 'MANUFATURADOS ';
   document.querySelector('#kpi-total').innerHTML = `US$ ${data.kpis.total} <small>bi</small>`;
+  const liveTotal = liveComexData[`${activeFlow}:${key}`]?.total;
+  if (Number.isFinite(liveTotal)) {
+    document.querySelector('#kpi-total').innerHTML = `${formatBi(liveTotal).replace(' bi', ' <small>bi</small>')}`;
+    document.querySelector('#donut-total').textContent = `US$ ${liveTotal.toLocaleString('pt-BR', { minimumFractionDigits: 1, maximumFractionDigits: 1 })}`;
+  }
   document.querySelector('#kpi-manufactured').innerHTML = `US$ ${data.kpis.manufactured} <small>bi</small>`;
+  const liveManufacturedData = liveManufactured[`${activeFlow}:${key}`];
+  if (liveManufacturedData) {
+    document.querySelector('#kpi-manufactured').innerHTML = `${formatBi(liveManufacturedData.total).replace(' bi', ' <small>bi</small>')}`;
+  }
   const commodity = commodityData[key][activeFlow];
   document.querySelector('#kpi-commodity-label').firstChild.textContent = activeFlow === 'import' ? 'COMMODITIES IMPORTADAS ' : 'COMMODITIES ';
   document.querySelector('#kpi-commodity').innerHTML = `US$ ${commodity.value} <small>bi</small>`;
@@ -306,7 +453,10 @@ function applyPeriod(key) {
   document.querySelector('#kpi-balance').innerHTML = `US$ ${data.kpis.balance} <small>bi</small>`;
   document.querySelector('#kpi-destinations').innerHTML = `${data.kpis.destinations} <small>países</small>`;
   document.querySelector('#donut-total').textContent = `US$ ${data.kpis.total}`;
-  document.querySelector('#manufactured-period').textContent = `${data.display} · US$ ${data.kpis.manufactured} bi`;
+  if (Number.isFinite(liveTotal)) {
+    document.querySelector('#donut-total').textContent = `US$ ${liveTotal.toLocaleString('pt-BR', { minimumFractionDigits: 1, maximumFractionDigits: 1 })}`;
+  }
+  document.querySelector('#manufactured-period').textContent = `${data.display} · US$ ${liveManufacturedData ? formatBi(liveManufacturedData.total) : `US$ ${data.kpis.manufactured} bi`}`;
   setTrend('#kpi-total-trend', data.kpis.totalTrend);
   setTrend('#kpi-manufactured-trend', data.kpis.manufacturedTrend);
   setTrend('#kpi-balance-trend', data.kpis.balanceTrend);
@@ -317,6 +467,7 @@ function applyPeriod(key) {
   const currentCommodityProducts = commodityProducts[activeFlow][key];
   document.querySelector('#commodity-heading').textContent = activeFlow === 'import' ? 'Produtos que puxam as importações' : 'Produtos que puxam as exportações';
   document.querySelectorAll('.commodity-card').forEach((card, index) => {
+    const liveProduct = liveProducts[`${activeFlow}:${key}`]?.[index];
     const [name, value, change, share] = currentCommodityProducts[index];
     card.querySelector('h3').textContent = name;
     card.querySelector('.sector-value').textContent = `US$ ${value} bi`;
@@ -324,16 +475,20 @@ function applyPeriod(key) {
     card.querySelector('.sector-change').classList.toggle('negative', change.startsWith('−'));
     card.querySelector('.sector-change').classList.toggle('positive', !change.startsWith('−'));
     card.querySelector('.sector-meta span').textContent = `${share} do total`;
+    if (liveProduct) {
+      card.querySelector('h3').textContent = liveProduct.name;
+      card.querySelector('.sector-value').textContent = liveProduct.value;
+    }
   });
   document.querySelectorAll('.manufactured-cards .sector-value').forEach((element, index) => {
-    element.textContent = `US$ ${data.manufactured[index]} bi`;
+    element.textContent = liveManufacturedData ? formatBi(liveManufacturedData.values[index]) : `US$ ${data.manufactured[index]} bi`;
   });
   document.querySelector('#industrialized-heading').textContent = activeFlow === 'import' ? 'Os dez principais industrializados importados' : 'Os dez principais manufaturados exportados';
   document.querySelectorAll('.manufactured-cards .sector-card h3').forEach((element, index) => {
     element.textContent = industrializedNames[activeFlow][index];
   });
   document.querySelectorAll('.manufactured-table .table-row > span:nth-child(2)').forEach((element, index) => {
-    element.textContent = `US$ ${data.manufactured[index]} bi`;
+    element.textContent = liveManufacturedData ? formatBi(liveManufacturedData.values[index]) : `US$ ${data.manufactured[index]} bi`;
   });
   document.querySelectorAll('.manufactured-table .table-row strong').forEach((element, index) => {
     element.textContent = industrializedNames[activeFlow][index];
@@ -347,21 +502,20 @@ function formatDate(date) {
 function refreshData() {
   const button = document.querySelector('#refresh-button');
   const toast = document.querySelector('#toast');
-  loadBalanceOfPayments();
+  const liveSources = Promise.all([loadBalanceOfPayments(), loadComexData()]);
   button.classList.add('loading');
   toast.textContent = 'Consultando dados mais recentes...';
   toast.classList.add('visible');
 
   // A camada de produção pode trocar este snapshot pela resposta do endpoint Comex Stat.
   // O fallback mantém o painel navegável quando a API pública bloquear CORS.
-  const probe = fetch('https://api-comexstat.mdic.gov.br/general', { method: 'HEAD', mode: 'no-cors' }).catch(() => null);
   const timeout = new Promise(resolve => window.setTimeout(resolve, 700));
-  Promise.race([probe, timeout]).finally(() => {
+  Promise.race([liveSources, timeout]).finally(() => {
     const now = new Date();
     localStorage.setItem('radar-last-source-check', now.toISOString());
     document.querySelector('#last-sync').textContent = formatDate(now);
     button.classList.remove('loading');
-    toast.textContent = 'Painel sincronizado com a última referência pública.';
+    toast.textContent = 'Painel atualizado com as fontes públicas disponíveis.';
     window.setTimeout(() => toast.classList.remove('visible'), 2800);
   });
 }
@@ -387,10 +541,6 @@ function updateNextBusinessRefresh(fromDate = new Date()) {
 
 function scheduleBusinessRefresh() {
   const now = new Date();
-  const lastCheck = localStorage.getItem('radar-last-source-check');
-  const todayRefresh = new Date(now);
-  todayRefresh.setHours(17, 0, 0, 0);
-  if (isBusinessDay(now) && now >= todayRefresh && (!lastCheck || new Date(lastCheck) < todayRefresh)) refreshData();
   updateNextBusinessRefresh(now);
   window.setInterval(() => {
     const current = new Date();
@@ -426,10 +576,14 @@ function showAnalysisSection(sectionId) {
 
 orderDashboardSections();
 applyPeriod(document.querySelector('#period-select').value);
-document.querySelector('#period-select').addEventListener('change', event => applyPeriod(event.target.value));
+document.querySelector('#period-select').addEventListener('change', event => {
+  applyPeriod(event.target.value);
+  loadComexData();
+});
 document.querySelector('#flow-select').addEventListener('change', event => {
   activeFlow = event.target.value;
   applyPeriod(document.querySelector('#period-select').value);
+  loadComexData();
 });
 document.querySelector('#refresh-button').addEventListener('click', refreshData);
 document.querySelector('#download-csv').addEventListener('click', downloadCSV);
@@ -453,4 +607,5 @@ document.querySelectorAll('#analysis-nav .nav-item').forEach(item => {
 });
 refreshData();
 window.setInterval(loadBalanceOfPayments, 15 * 60 * 1000);
+window.setInterval(loadComexData, 15 * 60 * 1000);
 scheduleBusinessRefresh();
