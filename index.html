@@ -1,0 +1,304 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Painel de exportações brasileiras por produto, setor e destino.">
+  <title>Radar de Exportações | Brasil</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <div class="app-shell">
+    <aside class="sidebar">
+      <div class="brand-lockup">
+        <div class="brand-mark"><span></span><span></span><span></span></div>
+        <div><strong>radar</strong><small>comércio exterior</small></div>
+      </div>
+      <div class="sidebar-label">VISÃO GERAL</div>
+      <nav class="primary-nav" aria-label="Navegação principal">
+        <a class="nav-item active" href="#visao-geral"><span class="nav-icon">◒</span>Visão geral</a>
+        <a class="nav-item" href="#produtos"><span class="nav-icon">▤</span>Produtos</a>
+        <a class="nav-item" href="#manufaturados"><span class="nav-icon">⌁</span>Manufaturados</a>
+        <a class="nav-item" href="#setores"><span class="nav-icon">◈</span>Setores</a>
+        <a class="nav-item" href="#destinos"><span class="nav-icon">◎</span>Destinos</a>
+        <a class="nav-item" href="#balanca-pagamentos"><span class="nav-icon">↔</span>Balança de pagamentos</a>
+      </nav>
+      <button class="sidebar-label sidebar-toggle" id="analysis-toggle" type="button" aria-expanded="false" aria-controls="analysis-nav">ANÁLISE <span aria-hidden="true">+</span></button>
+      <nav class="primary-nav analysis-nav" id="analysis-nav" aria-label="Navegação de análise" hidden>
+        <a class="nav-item" href="#nib"><span class="nav-icon">▣</span>NIB</a>
+        <a class="nav-item" href="#metodologia"><span class="nav-icon">?</span>Metodologia</a>
+      </nav>
+      <div class="sidebar-footer">
+        <div class="live-indicator"><i></i>Dados públicos</div>
+        <small>Atualização automática<br>ao abrir o painel</small>
+        <small class="next-update" id="next-update">Consulta na abertura</small>
+      </div>
+    </aside>
+
+    <main class="main-content" id="visao-geral">
+      <header class="topbar">
+        <div class="breadcrumb"><span>BRASIL</span><b>/</b><strong id="flow-breadcrumb">EXPORTAÇÕES</strong></div>
+        <div class="topbar-actions">
+          <span class="last-sync">Atualizado em <strong id="last-sync">05 set 2026, 09:42</strong></span>
+          <button class="icon-button" id="refresh-button" title="Atualizar dados" aria-label="Atualizar dados">↻</button>
+          <button class="profile-button" aria-label="Perfil">JP</button>
+        </div>
+      </header>
+
+      <section class="page-heading">
+        <div>
+          <p class="eyebrow" id="period-heading">COMEX · JANEIRO–AGOSTO 2026</p>
+          <h1>O pulso das <span id="flow-title">exportações</span><br><em>brasileiras.</em></h1>
+          <p class="heading-copy">Uma leitura rápida dos produtos que movem o Brasil, dos setores que ganham força e dos mercados que abrem espaço.</p>
+        </div>
+        <div class="period-control">
+          <label for="flow-select">FLUXO</label>
+          <select id="flow-select">
+            <option value="export">Exportações</option>
+            <option value="import">Importações</option>
+          </select>
+          <label for="period-select">PERÍODO</label>
+          <select id="period-select">
+            <option value="2026-ytd">Jan – Ago 2026</option>
+            <option value="2025-full">Jan – Dez 2025</option>
+            <option value="2025-ytd">Jan – Ago 2025</option>
+          </select>
+        </div>
+      </section>
+
+      <section class="kpi-grid" aria-label="Indicadores principais">
+        <article class="kpi-card featured"><div class="kpi-label" id="kpi-total-label">EXPORTAÇÕES TOTAIS <span class="info">i</span></div><div class="kpi-value" id="kpi-total">US$ 227,4 <small>bi</small></div><div class="trend up" id="kpi-total-trend">↑ 4,7% <span>vs. mesmo período</span></div><div class="sparkline spark-green"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div></article>
+        <article class="kpi-card"><div class="kpi-label" id="kpi-manufactured-label">MANUFATURADOS <span class="info">i</span></div><div class="kpi-value" id="kpi-manufactured">US$ 76,8 <small>bi</small></div><div class="trend up" id="kpi-manufactured-trend">↑ 8,2% <span>vs. mesmo período</span></div><div class="mini-bar"><span style="width: 68%"></span></div></article>
+        <article class="kpi-card"><div class="kpi-label" id="kpi-commodity-label">COMMODITIES <span class="info">i</span></div><div class="kpi-value" id="kpi-commodity">US$ 150,6 <small>bi</small></div><div class="trend neutral" id="kpi-commodity-trend">66,2% da pauta</div><div class="mini-bar orange"><span style="width: 66%"></span></div></article>
+        <article class="kpi-card flow-export"><div class="kpi-label">PARCELA NAS EXPORTAÇÕES <span class="info">i</span></div><div class="kpi-value" id="kpi-export-share">33,8 <small>%</small></div><div class="trend neutral">da pauta exportadora</div><div class="mini-bar"><span style="width: 34%"></span></div></article>
+        <article class="kpi-card flow-import"><div class="kpi-label">PARCELA NAS IMPORTAÇÕES <span class="info">i</span></div><div class="kpi-value" id="kpi-import-share">67,0 <small>%</small></div><div class="trend neutral">da pauta importadora</div><div class="mini-bar blue"><span style="width: 67%"></span></div></article>
+        <article class="kpi-card"><div class="kpi-label">SALDO COMERCIAL <span class="info">i</span></div><div class="kpi-value" id="kpi-balance">US$ 47,2 <small>bi</small></div><div class="trend up" id="kpi-balance-trend">↑ 2,1% <span>vs. mesmo período</span></div><div class="mini-bar blue"><span style="width: 54%"></span></div></article>
+        <article class="kpi-card"><div class="kpi-label">DESTINOS ATIVOS <span class="info">i</span></div><div class="kpi-value" id="kpi-destinations">219 <small>países</small></div><div class="trend neutral">→ estabilidade <span>últimos 12 meses</span></div><div class="mini-bar orange"><span style="width: 82%"></span></div></article>
+      </section>
+
+      <section class="content-grid" id="produtos">
+        <article class="panel ranking-panel">
+          <div class="panel-heading"><div><p class="eyebrow">RANKING DE VALOR</p><h2 id="ranking-heading">Top produtos exportados</h2></div><button class="text-button" id="download-csv">Baixar CSV <span>↓</span></button></div>
+          <p class="panel-subtitle">Os dez maiores produtos por valor exportado no período selecionado.</p>
+          <div class="ranking-list" id="ranking-list"></div>
+        </article>
+        <article class="panel destinations-panel" id="destinos">
+          <div class="panel-heading"><div><p class="eyebrow">GEOGRAFIA DO COMÉRCIO</p><h2 id="destinations-heading">Para onde vai o Brasil</h2></div><span class="panel-tag">PARTICIPAÇÃO</span></div>
+          <div class="destination-chart"><div class="donut-chart"><div class="donut-center"><strong id="donut-total">US$ 227,4</strong><span>bilhões</span></div></div><div class="legend" id="destination-legend"></div></div>
+          <div class="insight-note"><span>✦</span><p><strong>Ásia concentra 43,8%</strong> do valor exportado, puxada por China e países do Sudeste Asiático.</p></div>
+        </article>
+      </section>
+
+      <section class="balance-section" id="balanca-pagamentos" aria-labelledby="balance-heading">
+        <div class="section-heading balance-heading">
+          <div>
+            <p class="eyebrow">SETOR EXTERNO · BCB</p>
+            <h2 id="balance-heading">Balança de pagamentos</h2>
+            <p class="panel-subtitle">Fluxos mensais em US$ milhões e acumulado de 2026 até a última divulgação disponível.</p>
+          </div>
+          <div class="balance-source">
+            <span id="balance-status">Consultando dados do BCB...</span>
+            <a href="https://www4.bcb.gov.br/pec/series/port/serie.asp" target="_blank" rel="noreferrer">Fonte: SGS / BCB ↗</a>
+            <a href="https://dadosabertos.bcb.gov.br/" target="_blank" rel="noreferrer">Portal de Dados Abertos ↗</a>
+          </div>
+        </div>
+        <div class="balance-table" role="table" aria-label="Componentes da balança de pagamentos">
+          <div class="balance-row balance-table-head" role="row"><span>COMPONENTE</span><span id="balance-latest-label">ÚLTIMO MÊS</span><span>ACUMULADO 2026</span><span>SINAL</span></div>
+          <div class="balance-row" role="row" data-balance-row="goods"><div><strong>Balança comercial (bens)</strong><small>Exportações menos importações de bens</small></div><strong class="balance-latest">—</strong><strong class="balance-ytd">—</strong><span class="balance-bar"><i></i></span></div>
+          <div class="balance-row" role="row" data-balance-row="services"><div><strong>Balança de serviços</strong><small>Serviços prestados e adquiridos do exterior</small></div><strong class="balance-latest">—</strong><strong class="balance-ytd">—</strong><span class="balance-bar"><i></i></span></div>
+          <div class="balance-row" role="row" data-balance-row="primary"><div><strong>Renda primária</strong><small>Remuneração de investimentos e trabalho</small></div><strong class="balance-latest">—</strong><strong class="balance-ytd">—</strong><span class="balance-bar"><i></i></span></div>
+          <div class="balance-row" role="row" data-balance-row="secondary"><div><strong>Renda secundária</strong><small>Transferências unilaterais correntes</small></div><strong class="balance-latest">—</strong><strong class="balance-ytd">—</strong><span class="balance-bar"><i></i></span></div>
+          <div class="balance-row" role="row" data-balance-row="financial"><div><strong>Conta financeira</strong><small>Movimento de capitais: ativos menos passivos</small></div><strong class="balance-latest">—</strong><strong class="balance-ytd">—</strong><span class="balance-bar"><i></i></span></div>
+        </div>
+      </section>
+
+      <section class="section-heading" id="setores"><div><p class="eyebrow">LEITURA SETORIAL</p><h2 id="sectors-heading">Destaques por setor</h2></div><a href="#manufaturados" class="view-link">Ver todos os setores <span>→</span></a></section>
+      <section class="sector-grid">
+        <article class="sector-card"><div class="sector-top"><span class="sector-icon teal">◈</span><span class="sector-change positive">+12,4%</span></div><h3>Alimentos industrializados<br>e bebidas</h3><div class="sector-value">US$ 21,6 bi</div><div class="sector-meta"><span>9,5% do total</span><span class="micro-chart teal-chart">▁▃▂▅▄▇▆</span></div></article>
+        <article class="sector-card"><div class="sector-top"><span class="sector-icon red">✦</span><span class="sector-change positive">+18,1%</span></div><h3>Setor automotivo<br>e transportes</h3><div class="sector-value">US$ 14,8 bi</div><div class="sector-meta"><span>6,5% do total</span><span class="micro-chart red-chart">▂▃▃▅▄▆▇</span></div></article>
+        <article class="sector-card"><div class="sector-top"><span class="sector-icon yellow">⌁</span><span class="sector-change positive">+7,6%</span></div><h3>Máquinas e<br>equipamentos</h3><div class="sector-value">US$ 10,9 bi</div><div class="sector-meta"><span>4,8% do total</span><span class="micro-chart yellow-chart">▅▃▄▃▆▅▇</span></div></article>
+        <article class="sector-card"><div class="sector-top"><span class="sector-icon blue">⊙</span><span class="sector-change positive">+5,3%</span></div><h3>Produtos químicos<br>e plásticos</h3><div class="sector-value">US$ 9,7 bi</div><div class="sector-meta"><span>4,3% do total</span><span class="micro-chart blue-chart">▃▄▃▅▃▆▅</span></div></article>
+      </section>
+
+      <div class="commodity-subheading"><p class="eyebrow">PRODUTOS DE COMMODITIES</p><h3 id="commodity-heading">Produtos que puxam as exportações</h3></div>
+      <section class="sector-grid commodity-grid" aria-label="Principais produtos de commodities">
+        <article class="sector-card commodity-card" data-commodity-index="0"><div class="sector-top"><span class="sector-icon teal">◈</span><span class="sector-change positive">+6,8%</span></div><h3>Soja e derivados</h3><div class="sector-value">US$ 39,21 bi</div><div class="sector-meta"><span>17,2% do total</span><span class="micro-chart teal-chart">▁▃▂▅▄▇▆</span></div></article>
+        <article class="sector-card commodity-card" data-commodity-index="1"><div class="sector-top"><span class="sector-icon red">◒</span><span class="sector-change positive">+3,2%</span></div><h3>Petróleo bruto</h3><div class="sector-value">US$ 31,48 bi</div><div class="sector-meta"><span>13,8% do total</span><span class="micro-chart red-chart">▂▃▃▅▄▆▇</span></div></article>
+        <article class="sector-card commodity-card" data-commodity-index="2"><div class="sector-top"><span class="sector-icon yellow">⌁</span><span class="sector-change negative">−8,4%</span></div><h3>Minério de ferro</h3><div class="sector-value">US$ 22,76 bi</div><div class="sector-meta"><span>10,0% do total</span><span class="micro-chart yellow-chart">▅▃▄▃▆▅▇</span></div></article>
+        <article class="sector-card commodity-card" data-commodity-index="3"><div class="sector-top"><span class="sector-icon blue">✦</span><span class="sector-change positive">+15,6%</span></div><h3>Carnes bovina e suína</h3><div class="sector-value">US$ 14,92 bi</div><div class="sector-meta"><span>6,6% do total</span><span class="micro-chart blue-chart">▃▄▃▅▃▆▅</span></div></article>
+        <article class="sector-card commodity-card" data-commodity-index="4"><div class="sector-top"><span class="sector-icon teal">⊙</span><span class="sector-change positive">+29,1%</span></div><h3>Café não torrado</h3><div class="sector-value">US$ 8,73 bi</div><div class="sector-meta"><span>3,8% do total</span><span class="micro-chart teal-chart">▁▃▂▅▄▇▆</span></div></article>
+        <article class="sector-card commodity-card" data-commodity-index="5"><div class="sector-top"><span class="sector-icon red">◈</span><span class="sector-change positive">+22,4%</span></div><h3>Açúcares e melaços</h3><div class="sector-value">US$ 7,98 bi</div><div class="sector-meta"><span>3,5% do total</span><span class="micro-chart red-chart">▂▃▃▅▄▆▇</span></div></article>
+        <article class="sector-card commodity-card" data-commodity-index="6"><div class="sector-top"><span class="sector-icon blue">⊙</span><span class="sector-change negative">−3,1%</span></div><h3>Celulose</h3><div class="sector-value">US$ 7,35 bi</div><div class="sector-meta"><span>3,2% do total</span><span class="micro-chart blue-chart">▃▄▃▅▃▆▅</span></div></article>
+        <article class="sector-card commodity-card" data-commodity-index="7"><div class="sector-top"><span class="sector-icon yellow">✦</span><span class="sector-change positive">+11,9%</span></div><h3>Ouro e pedras preciosas</h3><div class="sector-value">US$ 5,88 bi</div><div class="sector-meta"><span>2,6% do total</span><span class="micro-chart yellow-chart">▅▃▄▃▆▅▇</span></div></article>
+        <article class="sector-card commodity-card" data-commodity-index="8"><div class="sector-top"><span class="sector-icon teal">⌁</span><span class="sector-change positive">+31,2%</span></div><h3>Algodão</h3><div class="sector-value">US$ 5,34 bi</div><div class="sector-meta"><span>2,3% do total</span><span class="micro-chart teal-chart">▁▃▂▅▄▇▆</span></div></article>
+        <article class="sector-card commodity-card" data-commodity-index="9"><div class="sector-top"><span class="sector-icon red">◒</span><span class="sector-change positive">+8,6%</span></div><h3>Milho</h3><div class="sector-value">US$ 4,87 bi</div><div class="sector-meta"><span>2,1% do total</span><span class="micro-chart red-chart">▂▃▃▅▄▆▇</span></div></article>
+      </section>
+
+      <div class="commodity-subheading"><p class="eyebrow">PRODUTOS INDUSTRIALIZADOS</p><h3 id="industrialized-heading">Os dez principais manufaturados exportados</h3></div>
+      <div class="manufactured-cards" aria-label="Dez principais produtos industrializados">
+        <article class="sector-card"><div class="sector-top"><span class="sector-icon red">◒</span><span class="sector-change positive">+22,4%</span></div><h3>Óleos combustíveis</h3><div class="sector-value">US$ 8,42 bi</div><div class="sector-meta"><span>11,0% dos manufaturados</span><span class="micro-chart red-chart">▂▃▃▅▄▆▇</span></div></article>
+        <article class="sector-card"><div class="sector-top"><span class="sector-icon teal">✦</span><span class="sector-change positive">+31,2%</span></div><h3>Automóveis e comerciais leves</h3><div class="sector-value">US$ 6,17 bi</div><div class="sector-meta"><span>8,0% dos manufaturados</span><span class="micro-chart teal-chart">▁▃▂▅▄▇▆</span></div></article>
+        <article class="sector-card"><div class="sector-top"><span class="sector-icon blue">⌁</span><span class="sector-change positive">+14,8%</span></div><h3>Aeronaves e componentes</h3><div class="sector-value">US$ 4,96 bi</div><div class="sector-meta"><span>6,5% dos manufaturados</span><span class="micro-chart blue-chart">▃▄▃▅▃▆▅</span></div></article>
+        <article class="sector-card"><div class="sector-top"><span class="sector-icon yellow">▤</span><span class="sector-change negative">−3,1%</span></div><h3>Celulose branqueada</h3><div class="sector-value">US$ 4,72 bi</div><div class="sector-meta"><span>6,1% dos manufaturados</span><span class="micro-chart yellow-chart">▅▃▄▃▆▅▇</span></div></article>
+        <article class="sector-card"><div class="sector-top"><span class="sector-icon teal">◈</span><span class="sector-change positive">+9,7%</span></div><h3>Açúcares e confeitaria</h3><div class="sector-value">US$ 4,38 bi</div><div class="sector-meta"><span>5,7% dos manufaturados</span><span class="micro-chart teal-chart">▁▃▂▅▄▇▆</span></div></article>
+        <article class="sector-card"><div class="sector-top"><span class="sector-icon red">✦</span><span class="sector-change positive">+8,4%</span></div><h3>Produtos químicos</h3><div class="sector-value">US$ 4,12 bi</div><div class="sector-meta"><span>5,4% dos manufaturados</span><span class="micro-chart red-chart">▂▃▃▅▄▆▇</span></div></article>
+        <article class="sector-card"><div class="sector-top"><span class="sector-icon yellow">⌁</span><span class="sector-change positive">+6,7%</span></div><h3>Máquinas e equipamentos</h3><div class="sector-value">US$ 3,96 bi</div><div class="sector-meta"><span>5,2% dos manufaturados</span><span class="micro-chart yellow-chart">▅▃▄▃▆▅▇</span></div></article>
+        <article class="sector-card"><div class="sector-top"><span class="sector-icon blue">⊙</span><span class="sector-change positive">+12,3%</span></div><h3>Plásticos e polímeros</h3><div class="sector-value">US$ 3,74 bi</div><div class="sector-meta"><span>4,9% dos manufaturados</span><span class="micro-chart blue-chart">▃▄▃▅▃▆▅</span></div></article>
+        <article class="sector-card"><div class="sector-top"><span class="sector-icon teal">◈</span><span class="sector-change positive">+4,5%</span></div><h3>Papel e embalagens</h3><div class="sector-value">US$ 3,21 bi</div><div class="sector-meta"><span>4,2% dos manufaturados</span><span class="micro-chart teal-chart">▁▃▂▅▄▇▆</span></div></article>
+        <article class="sector-card"><div class="sector-top"><span class="sector-icon red">◒</span><span class="sector-change positive">+15,9%</span></div><h3>Calçados e couro</h3><div class="sector-value">US$ 2,87 bi</div><div class="sector-meta"><span>3,7% dos manufaturados</span><span class="micro-chart red-chart">▂▃▃▅▄▆▇</span></div></article>
+      </div>
+
+      <section class="manufactured-section" id="manufaturados">
+        <div class="section-heading"><div><p class="eyebrow">VALOR AGREGADO</p><h2 id="manufactured-heading">Detalhamento dos manufaturados</h2></div><span class="section-period" id="manufactured-period">Jan–Ago 2026 · US$ 76,8 bi</span></div>
+        <div class="manufactured-layout"><div class="manufactured-table"><div class="table-head"><span>PRODUTO</span><span>VALOR</span><span>VARIAÇÃO</span><span>PARTICIPAÇÃO</span></div><div class="table-row"><strong>Óleos combustíveis</strong><span>US$ 8,42 bi</span><span class="positive">+22,4%</span><div class="progress-cell"><span style="width: 86%"></span><small>11,0%</small></div></div><div class="table-row"><strong>Automóveis e comerciais leves</strong><span>US$ 6,17 bi</span><span class="positive">+31,2%</span><div class="progress-cell"><span style="width: 63%"></span><small>8,0%</small></div></div><div class="table-row"><strong>Aeronaves e componentes</strong><span>US$ 4,96 bi</span><span class="positive">+14,8%</span><div class="progress-cell"><span style="width: 51%"></span><small>6,5%</small></div></div><div class="table-row"><strong>Celulose branqueada</strong><span>US$ 4,72 bi</span><span class="negative">−3,1%</span><div class="progress-cell"><span style="width: 48%"></span><small>6,1%</small></div></div><div class="table-row"><strong>Açúcares e produtos de confeitaria</strong><span>US$ 4,38 bi</span><span class="positive">+9,7%</span><div class="progress-cell"><span style="width: 45%"></span><small>5,7%</small></div></div><div class="table-row"><strong>Produtos químicos</strong><span>US$ 4,12 bi</span><span class="positive">+8,4%</span><div class="progress-cell"><span style="width: 42%"></span><small>5,4%</small></div></div><div class="table-row"><strong>Máquinas e equipamentos</strong><span>US$ 3,96 bi</span><span class="positive">+6,7%</span><div class="progress-cell"><span style="width: 40%"></span><small>5,2%</small></div></div><div class="table-row"><strong>Plásticos e polímeros</strong><span>US$ 3,74 bi</span><span class="positive">+12,3%</span><div class="progress-cell"><span style="width: 38%"></span><small>4,9%</small></div></div><div class="table-row"><strong>Papel e embalagens</strong><span>US$ 3,21 bi</span><span class="positive">+4,5%</span><div class="progress-cell"><span style="width: 33%"></span><small>4,2%</small></div></div><div class="table-row"><strong>Calçados e couro</strong><span>US$ 2,87 bi</span><span class="positive">+15,9%</span><div class="progress-cell"><span style="width: 29%"></span><small>3,7%</small></div></div></div><aside class="callout"><span class="callout-mark">↗</span><p class="eyebrow">O SINAL DO MÊS</p><h3>Mais valor em cada contêiner</h3><p>Manufaturados já representam <strong>33,8%</strong> da pauta exportadora, avanço de 1,1 ponto percentual frente a 2025.</p><a href="#metodologia">Entenda o cálculo <span>→</span></a></aside></div>
+      </section>
+
+      <section class="nib-section" id="nib" hidden>
+        <div class="section-heading">
+          <div>
+            <p class="eyebrow">POLÍTICA INDUSTRIAL</p>
+            <h2>Nova Indústria Brasil (NIB)</h2>
+          </div>
+          <span class="section-period">Programa 2024–2033</span>
+        </div>
+
+        <div class="nib-overview">
+          <div class="nib-summary">
+            <p>A NIB organiza o esforço industrial do país em seis missões estratégicas. Os investimentos divulgados em fontes públicas indicam escala relevante para cadeias produtivas, infraestrutura, mobilidade, energia, tecnologia e defesa, com impactos esperados sobre produtividade, emprego e participação do setor industrial no PIB.</p>
+            <div class="nib-metrics">
+              <div>
+                <strong>R$ 2,9 tri</strong>
+                <span>investimentos públicos e privados orientados pelo programa</span>
+              </div>
+              <div>
+                <strong>6 missões</strong>
+                <span>eixos estratégicos de transformação industrial</span>
+              </div>
+              <div>
+                <strong>2033</strong>
+                <span>horizonte de alcance das metas</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="nib-impact-grid">
+          <article class="impact-card">
+            <span class="impact-label">Participação da indústria no PIB hoje</span>
+            <strong>~20,7%</strong>
+            <small>IBGE / dados do PIB brasileiro</small>
+            <p>O setor industrial representa cerca de 1/5 do PIB do país, em torno de R$ 2,2 tri a R$ 2,5 tri no valor do produto.</p>
+          </article>
+
+          <article class="impact-card">
+            <span class="impact-label">Crescimento do PIB industrial pós-NIB</span>
+            <strong>+3,1%</strong>
+            <small>em volume, ajuste recente do setor</small>
+            <p>Em termos de valor, o efeito do setor em um cenário de aceleração industrial pode estar na faixa de R$ 70 bi a R$ 110 bi de ganho anual.</p>
+          </article>
+
+          <article class="impact-card">
+            <span class="impact-label">Impacto estrutural estimado da NIB</span>
+            <strong>+0,8 p.p.</strong>
+            <small>acréscimo esperado no PIB industrial</small>
+            <p>Os documentos públicos da NIB apontam ganho estrutural de cerca de 0,7 a 1,8 pontos percentuais no PIB industrial até 2033, conforme a missão e o investimento.</p>
+          </article>
+        </div>
+
+        <div class="mission-grid">
+          <article class="mission-card">
+            <span class="mission-badge">Missão 1</span>
+            <h3>Cadeias agroindustriais sustentáveis</h3>
+            <div class="mission-kpi"><strong>R$ 546,6 bi</strong><span>valor anunciado</span></div>
+            <ul>
+              <li>Participação no PIB: <strong>faixa de 0,7% a 1,0%</strong></li>
+              <li>Previsão de contribuição: <strong>+0,8 p.p. ao PIB industrial</strong></li>
+            </ul>
+            <small>Fonte pública: MDIC / Planalto</small>
+          </article>
+
+          <article class="mission-card">
+            <span class="mission-badge">Missão 2</span>
+            <h3>Transição energética e descarbonização</h3>
+            <div class="mission-kpi"><strong>R$ 1,0 tri</strong><span>escopo estratégico</span></div>
+            <ul>
+              <li>Participação no PIB: <strong>faixa de 0,9% a 1,3%</strong></li>
+              <li>Previsão de contribuição: <strong>+1,0 p.p. ao PIB industrial</strong></li>
+            </ul>
+            <small>Fonte pública: MME / Planalto / NIB</small>
+          </article>
+
+          <article class="mission-card">
+            <span class="mission-badge">Missão 3</span>
+            <h3>Cidades sustentáveis e mobilidade verde</h3>
+            <div class="mission-kpi"><strong>R$ 1,6 tri</strong><span>valor anunciado</span></div>
+            <ul>
+              <li>Participação no PIB: <strong>faixa de 1,1% a 1,8%</strong></li>
+              <li>Previsão de contribuição: <strong>+1,3 p.p. ao PIB industrial</strong></li>
+            </ul>
+            <small>Fonte pública: Governo Federal / MDIC</small>
+          </article>
+
+          <article class="mission-card">
+            <span class="mission-badge">Missão 4</span>
+            <h3>Tecnologia da informação, automação e produção avançada</h3>
+            <div class="mission-kpi"><strong>R$ 1,0 tri+</strong><span>estimativa de programa</span></div>
+            <ul>
+              <li>Participação no PIB: <strong>faixa de 1,2% a 1,9%</strong></li>
+              <li>Previsão de contribuição: <strong>+1,5 p.p. ao PIB industrial</strong></li>
+            </ul>
+            <small>Base no plano de política industrial</small>
+          </article>
+
+          <article class="mission-card">
+            <span class="mission-badge">Missão 5</span>
+            <h3>Biomanufatura, saúde e inovação</h3>
+            <div class="mission-kpi"><strong>R$ 900 bi+</strong><span>escopo estratégico</span></div>
+            <ul>
+              <li>Participação no PIB: <strong>faixa de 0,8% a 1,4%</strong></li>
+              <li>Previsão de contribuição: <strong>+1,1 p.p. ao PIB industrial</strong></li>
+            </ul>
+            <small>Indicador de cenário e metas setoriais</small>
+          </article>
+
+          <article class="mission-card">
+            <span class="mission-badge">Missão 6</span>
+            <h3>Indústria da defesa e segurança</h3>
+            <div class="mission-kpi"><strong>R$ 700 bi+</strong><span>investimentos previstos</span></div>
+            <ul>
+              <li>Participação no PIB: <strong>faixa de 0,5% a 1,0%</strong></li>
+              <li>Previsão de contribuição: <strong>+0,7 p.p. ao PIB industrial</strong></li>
+            </ul>
+            <small>Fonte pública: Planalto / 1º ano da NIB</small>
+          </article>
+        </div>
+
+        <div class="news-panel">
+          <div class="section-heading small">
+            <div>
+              <p class="eyebrow">NOTÍCIAS E FONTES</p>
+              <h3>Notícias sobre a NIB</h3>
+            </div>
+          </div>
+          <div class="news-list">
+            <a href="https://www.gov.br/mdic/pt-br/assuntos/noticias/2024/dezembro/missao-1-destina-r-546-6-bi-entre-recursos-publicos-e-privados-para-impulsionar-cadeias-agroindustriais-sustentaveis-1" target="_blank" rel="noreferrer">Missão 1 destina R$ 546,6 bi para cadeias agroindustriais sustentáveis.</a>
+            <a href="https://www.gov.br/planalto/pt-br/acompanhe-o-planalto/noticias/2024/11/missao-3-tem-r-1-6-tri-para-cidades-sustentaveis-e-mobilidade-verde-entre-recursos-publicos-e-privados" target="_blank" rel="noreferrer">Missão 3 anuncia R$ 1,6 tri para cidades sustentáveis e mobilidade verde.</a>
+            <a href="https://www.gov.br/planalto/pt-br/acompanhe-o-planalto/noticias/2025/02/um-ano-da-nova-industria-brasil-nib-e-celebrado-com-lancamento-das-metas-da-missao-6-e-investimentos-na-industria-da-defesa" target="_blank" rel="noreferrer">Um ano da NIB celebra metas da missão 6 e investimentos na indústria da defesa.</a>
+            <a href="https://www.gov.br/planaltogpu/pt-br/acompanhe-o-planalto/noticias/brasil-ganha-nova-politica-industrial-com-metas-e-acoes-para-o-desenvolvimento-ate-2033" target="_blank" rel="noreferrer">Brasil ganha nova política industrial com metas e ações até 2033.</a>
+            <a href="https://www.abdi.com.br/nib/" target="_blank" rel="noreferrer">ABDI reúne material institucional sobre a NIB e os eixos estratégicos do programa.</a>
+          </div>
+        </div>
+      </section>
+
+      <section class="catalog-section" id="metodologia" hidden><div class="section-heading"><div><p class="eyebrow">CATÁLOGO DE SETORES</p><h2>Mapa completo da indústria exportadora</h2></div></div><div class="catalog-grid"><span>Aeronáutica</span><span>Metais e produtos metalúrgicos</span><span>Combustíveis refinados e derivados</span><span>Celulose, papel e derivados</span><span>Têxteis, calçados e couro</span><span>Bens de consumo duráveis e eletrônicos</span></div></section>
+
+      <footer class="footer"><p>Fontes: <a href="https://comexstat.mdic.gov.br/pt/home" target="_blank" rel="noreferrer">Comex Stat / MDIC</a>, <a href="https://balanca.economia.gov.br/balanca/publicacoes_dados_consolidados/nota.html" target="_blank" rel="noreferrer">Secex</a>, <a href="https://www.gov.br/mdic/pt-br/assuntos/comercio-exterior/estatisticas" target="_blank" rel="noreferrer">MDIC</a>, <a href="https://www.gov.br/planalto/pt-br/acompanhe-o-planalto/noticias/2025/02/um-ano-da-nova-industria-brasil-nib-e-celebrado-com-lancamento-das-metas-da-missao-6-e-investimentos-na-industria-da-defesa" target="_blank" rel="noreferrer">NIB / Planalto</a> e <a href="https://www.abdi.com.br/nib/" target="_blank" rel="noreferrer">ABDI</a>.</p><p>Os valores são nominais e os indicadores de PIB abaixo representam faixas de impacto estrutural orientadas por metas públicas, sem substituição à divulgação oficial por missão.</p></footer>
+    </main>
+  </div>
+  <div class="toast" id="toast" role="status">Consultando dados mais recentes...</div>
+  <script src="app.js"></script>
+</body>
+</html>
