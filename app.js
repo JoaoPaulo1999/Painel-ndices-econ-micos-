@@ -166,6 +166,34 @@ function formatBi(amount) {
   return `US$ ${amount.toFixed(2).replace('.', ',')} bi`;
 }
 
+function shortenProductName(name) {
+  const normalizedName = String(name).toLowerCase();
+  if (normalizedName.includes('minérios de ferro') || normalizedName.includes('minério de ferro')) return 'Minério de ferro';
+  if (normalizedName.includes('óleos brutos de petróleo')) return 'Petróleo bruto';
+  if (normalizedName.includes('soja, mesmo triturada')) return 'Soja e derivados';
+  if (normalizedName.includes('carnes desossadas de bovino')) return 'Carne bovina';
+  if (normalizedName.includes('pastas químicas de madeira')) return 'Celulose';
+  return name.length > 30 ? `${name.slice(0, 27).trimEnd()}...` : name;
+}
+
+function formatCommodityName(name) {
+  const normalizedName = String(name).toLowerCase();
+  if (normalizedName.includes('soja')) return 'Soja e derivados';
+  if (normalizedName.includes('petróleo bruto') || normalizedName.includes('óleos brutos de petróleo')) return 'Petróleo bruto';
+  if (normalizedName.includes('minérios de ferro') || normalizedName.includes('minério de ferro')) return 'Minério de ferro';
+  if (normalizedName.includes('carne') || normalizedName.includes('bovino')) return 'Carne bovina';
+  if (normalizedName.includes('café')) return 'Café não torrado';
+  if (normalizedName.includes('pasta química') || normalizedName.includes('celulose')) return 'Celulose';
+  if (normalizedName.includes('fuel oil') || normalizedName.includes('óleo combustível')) return 'Óleos combustíveis';
+  if (normalizedName.includes('açúcar') || normalizedName.includes('açúcares')) return 'Açúcares e melaços';
+  if (normalizedName.includes('bagaço') || normalizedName.includes('resíduos vegetais')) return 'Bagaços e resíduos vegetais';
+  if (normalizedName.includes('bulhão dourado') || normalizedName.includes('bullion')) return 'Ouro em barras';
+  if (normalizedName.includes('ouro') || normalizedName.includes('pedras preciosas')) return 'Ouro e pedras preciosas';
+  if (normalizedName.includes('algodão')) return 'Algodão';
+  if (normalizedName.includes('milho')) return 'Milho';
+  return shortenProductName(name);
+}
+
 function getComexPeriod(key) {
   if (key === '2025-full') return { from: '2025-01', to: '2025-12' };
   if (key === '2025-ytd') return { from: '2025-01', to: '2025-08' };
@@ -209,7 +237,7 @@ async function loadComexData() {
       if (!rows.length || !Number.isFinite(total)) throw new Error('Resposta do Comex Stat sem valores.');
       liveComexData[`${flow}:${key}`] = { total, rows };
       liveProducts[`${flow}:${key}`] = rows.slice(0, 10).map((row, index) => ({
-        name: row.ncm || row.coNcm || 'Produto não identificado',
+        name: shortenProductName(row.ncm || row.coNcm || 'Produto não identificado'),
         value: formatBi(Number(row.metricFOB) / 1e9),
         change: products[index]?.change || '—',
         width: index === 0 ? 100 : Math.max(18, Math.round(Number(row.metricFOB) / Number(rows[0].metricFOB) * 100))
@@ -476,7 +504,7 @@ function applyPeriod(key) {
     card.querySelector('.sector-change').classList.toggle('positive', !change.startsWith('−'));
     card.querySelector('.sector-meta span').textContent = `${share} do total`;
     if (liveProduct) {
-      card.querySelector('h3').textContent = liveProduct.name;
+      card.querySelector('h3').textContent = formatCommodityName(liveProduct.name);
       card.querySelector('.sector-value').textContent = liveProduct.value;
     }
   });
